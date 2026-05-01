@@ -22,7 +22,7 @@ process NEXTCLADE_RUN {
     tuple val(meta), path("${prefix}.aligned.fasta") , optional:true, emit: fasta_aligned
     tuple val(meta), path("*_translation.*.fasta")   , optional:true, emit: fasta_translation
     tuple val(meta), path("${prefix}.nwk")           , optional:true, emit: nwk
-    path "versions.yml"                              , emit: versions
+    tuple val("${task.process}"), val('nextclade'), eval("nextclade --version 2>&1 | sed 's/^.*nextclade //; s/ .*\$//'"), emit: versions_nextclade, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -39,11 +39,6 @@ process NEXTCLADE_RUN {
         --output-all ./ \\
         --output-basename ${prefix} \\
         $fasta
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        nextclade: \$(echo \$(nextclade --version 2>&1) | sed 's/^.*nextclade //; s/ .*\$//')
-    END_VERSIONS
     """
 
     stub:
@@ -56,10 +51,5 @@ process NEXTCLADE_RUN {
     touch ${prefix}.aligned.fasta
     touch ${prefix}.cds_translation.test.fasta
     touch ${prefix}.nwk
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        nextclade: \$(echo \$(nextclade --version 2>&1) | sed 's/^.*nextclade //; s/ .*\$//')
-    END_VERSIONS
     """
 }
